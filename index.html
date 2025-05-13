@@ -1,32 +1,83 @@
 <!DOCTYPE html>
-<html>
+<html lang="es"> <!-- 1. Idioma del documento -->
 <head>
-    <title>TimeTracker ⏱️</title>
+    <meta charset="UTF-8"> <!-- 2. Codificación de caracteres -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 3. Viewport para responsividad -->
+    <meta name="description" content="Una aplicación para registrar y visualizar el tiempo dedicado a diferentes actividades como videojuegos, redes sociales y streaming."> <!-- 4. Descripción SEO más detallada -->
+    
+    <title>TimeTracker ⏱️ - Registra tu Tiempo</title> <!-- Título ligeramente más descriptivo -->
+
+    <!-- 5. Favicon (descomenta y reemplaza 'favicon.ico' con tu archivo) -->
+    <!-- <link rel="icon" href="favicon.ico" type="image/x-icon"> -->
+    <!-- <link rel="apple-touch-icon" href="apple-touch-icon.png"> -->
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Registro de Tiempo 🕹️</h1>
-        
-        <div class="timer-card">
-            <select id="category">
-                <option value="Videojuegos">🎮 Videojuegos</option>
-                <option value="Redes">📱 Redes Sociales</option>
-                <option value="Streaming">🎥 Streaming</option>
-            </select>
-            <button id="startStopBtn" onclick="toggleTimer()">▶️ Iniciar</button>
-            <p id="timerDisplay">00:00:00</p>
-            <button onclick="clearHistory()" class="delete-btn">🗑️ Borrar Historial</button>
+    <header> <!-- 6. Encabezado de la página (opcional, pero bueno para el título principal) -->
+        <div class="container">
+             <h1>Registro de Tiempo 🕹️</h1>
         </div>
+    </header>
 
-        <div class="stats">
-            <h2>Estadísticas 📊</h2>
-            <canvas id="chart"></canvas>
-            <ul id="historyList"></ul>
+    <main class="container"> <!-- 7. Contenido principal de la aplicación -->
+        
+        <section class="timer-card" aria-labelledby="timer-section-heading"> <!-- 8. Sección para el temporizador -->
+            <h2 id="timer-section-heading" class="visually-hidden">Control del Temporizador de Actividad</h2> <!-- 8a. Encabezado para accesibilidad -->
+            
+            <div> <!-- 8b. Div para agrupar label y select -->
+                <label for="category">Selecciona una actividad:</label>
+                <select id="category" name="category">
+                    <!-- La opción "Selecciona Categoría" será añadida por JS si no existe -->
+                    <option value="Videojuegos">🎮 Videojuegos</option>
+                    <option value="Redes">📱 Redes Sociales</option>
+                    <option value="Streaming">🎥 Streaming</option>
+                    <option value="Estudio">📚 Estudio</option> <!-- Ejemplo de nueva categoría -->
+                    <option value="Trabajo">💼 Trabajo</option>   <!-- Ejemplo de nueva categoría -->
+                    <!-- Puedes añadir más opciones aquí o gestionarlas desde JS si son muy dinámicas -->
+                </select>
+            </div>
+            
+            <!-- 9. Botones sin 'onclick'. El JS se encargará de los eventos. -->
+            <!--    Los atributos aria-label serán gestionados por JS para reflejar el estado. -->
+            <button type="button" id="startStopBtn" aria-label="Iniciar temporizador">▶️ Iniciar</button>
+            
+            <p id="timerDisplay" role="timer" aria-live="polite" aria-atomic="true">00:00:00</p> <!-- 10. ARIA mejorado para el display -->
+            
+        </section>
+
+        <section class="stats" aria-labelledby="stats-section-heading"> <!-- 11. Sección para estadísticas -->
+            <h2 id="stats-section-heading">Estadísticas de Tiempo 📊</h2>
+            
+            <div class="chart-container"> <!-- 11a. Contenedor para el canvas, útil para responsividad y estilos -->
+                <canvas id="chart" role="img" aria-label="Gráfico circular de distribución de tiempo por actividad">
+                    Tu navegador no soporta el elemento canvas. Aquí se mostraría un gráfico de tiempo.
+                </canvas>
+            </div>
+            
+            <h3>Historial de Actividades:</h3>
+            <ul id="historyList" aria-live="polite"> <!-- 12. aria-live para la lista si se actualiza dinámicamente y es importante -->
+                <!-- El contenido de la lista será generado por JavaScript -->
+                <!-- Se mostrará "No hay actividades registradas aún." si está vacía, manejado por JS/CSS -->
+            </ul>
+            <!-- Botón de borrar historial movido aquí para mejor agrupación lógica con el historial -->
+            <button type="button" class="delete-btn">🗑️ Borrar Todo el Historial</button>
+        </section>
+    </main>
+
+    <footer> <!-- 13. Pie de página (opcional) -->
+        <div class="container">
+            <p><small>© <span id="currentYear"></span> Tu Nombre o Nombre del Proyecto. Todos los derechos reservados.</small></p>
+            <!-- <p><small><a href="enlace-a-politica-privacidad.html">Política de Privacidad</a></small></p> -->
         </div>
-    </div>
+    </footer>
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="app.js"></script>
+    <!-- Scripts al final del body. 'defer' asegura que se ejecuten después de parsear el HTML. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="app.js" defer></script>
+    <script>
+        // Pequeño script para el año actual en el footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
