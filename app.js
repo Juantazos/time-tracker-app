@@ -1,6 +1,3 @@
-// ========================================================
-//  INICIO DEL CÓDIGO COMPLETO PARA app.js (v1.5)
-// ========================================================
 "use strict";
 
 console.log("app.js: Script cargado y ejecutándose.");
@@ -31,7 +28,7 @@ const DOMElements = {
     historyList: null,
     chartCanvas: null,
     deleteHistoryBtn: null,
-    currentSessionDisplay: null // **** ELEMENTO PARA DISPLAY DE SESIÓN ACTUAL ****
+    currentSessionDisplay: null // **** NUEVO ELEMENTO DEL DOM ****
 };
 
 function cacheDOMElements() {
@@ -46,6 +43,7 @@ function cacheDOMElements() {
 
     for (const key in DOMElements) {
         if (DOMElements[key] === null) {
+            // Permitir que currentSessionDisplay sea opcional si no se añade al HTML inmediatamente
             if (key === 'currentSessionDisplay') {
                 console.warn(`app.js: Elemento opcional del DOM no encontrado: ${key}. La función de display de sesión actual no se activará.`);
             } else {
@@ -69,6 +67,7 @@ let appState = {
 // -------------------------------------
 //  UTILIDADES
 // -------------------------------------
+// ... (formatMillisecondsToTime y formatMillisecondsToHours se mantienen igual) ...
 function formatMillisecondsToTime(ms) {
     if (typeof ms !== 'number' || isNaN(ms) || ms < 0) {
         console.warn("app.js: formatMillisecondsToTime recibió un valor inválido:", ms);
@@ -93,6 +92,7 @@ function formatMillisecondsToHours(ms) {
 //  LÓGICA DEL TEMPORIZADOR
 // -------------------------------------
 function toggleTimer() {
+    // ... (inicio de toggleTimer se mantiene igual) ...
     console.log("app.js: toggleTimer llamado. Estado actual isTimerRunning:", appState.isTimerRunning);
     if (!DOMElements.startStopBtn || !DOMElements.categorySelect) {
         console.error("app.js: Botón Start/Stop o select de categoría no encontrado en toggleTimer.");
@@ -109,7 +109,7 @@ function toggleTimer() {
             DOMElements.startStopBtn.textContent = '▶️ Iniciar';
             DOMElements.startStopBtn.classList.remove('running');
             DOMElements.startStopBtn.setAttribute('aria-label', 'Iniciar temporizador');
-            if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = '';
+            if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = ''; // Limpiar display de sesión actual
             return;
         }
         appState.currentSessionStartTime = Date.now();
@@ -130,7 +130,7 @@ function toggleTimer() {
         DOMElements.startStopBtn.classList.remove('running');
         DOMElements.startStopBtn.setAttribute('aria-label', 'Iniciar temporizador');
         
-        if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = ''; // **** LIMPIAR DISPLAY DE SESIÓN ACTUAL ****
+        if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = ''; // **** LIMPIAR DISPLAY DE SESIÓN ACTUAL AL DETENER ****
         
         if (appState.currentSessionStartTime > 0) {
             saveCurrentEntry();
@@ -146,10 +146,13 @@ function tick() {
     // **** ACTUALIZAR EL DISPLAY DE LA SESIÓN ACTUAL ****
     if (appState.isTimerRunning && DOMElements.currentSessionDisplay && DOMElements.categorySelect && DOMElements.categorySelect.value) {
         const elapsedMs = Date.now() - appState.currentSessionStartTime;
+        // Usar innerText para seguridad si la categoría pudiera tener caracteres HTML, aunque aquí es de un select.
+        // Usar textContent es generalmente preferido si no hay riesgo de XSS.
         DOMElements.currentSessionDisplay.textContent = 
             `Sesión (${DOMElements.categorySelect.value}): ${formatMillisecondsToTime(elapsedMs)}`;
     } else if (DOMElements.currentSessionDisplay) {
-        // No es necesario limpiar aquí, se hace en toggleTimer al detener
+        // Si no está corriendo o no hay categoría, limpiar (esto ya se hace en toggleTimer al detener)
+        // DOMElements.currentSessionDisplay.textContent = ''; 
     }
 
     const now = Date.now();
@@ -162,6 +165,7 @@ function tick() {
 }
 
 function updateTimerDisplay() {
+    // ... (updateTimerDisplay se mantiene igual) ...
     if (!DOMElements.timerDisplay) return;
     const elapsedMilliseconds = appState.currentSessionStartTime > 0 ? (Date.now() - appState.currentSessionStartTime) : 0;
     DOMElements.timerDisplay.textContent = formatMillisecondsToTime(elapsedMilliseconds);
@@ -170,6 +174,7 @@ function updateTimerDisplay() {
 // -------------------------------------
 //  MANEJO DE DATOS (ENTRADAS E HISTORIAL)
 // -------------------------------------
+// ... (saveCurrentEntry, loadEntriesFromLocalStorage, saveEntriesToLocalStorage, clearAllHistory, deleteSingleEntry se mantienen igual) ...
 function saveCurrentEntry() {
     if (!DOMElements.categorySelect) return;
     const category = DOMElements.categorySelect.value;
@@ -228,7 +233,7 @@ function clearAllHistory() {
     if (confirm("⚠️ ¿Estás seguro de que quieres borrar TODO el historial? Esta acción no se puede deshacer.")) {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         appState.timeEntries = [];
-        if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = ''; // Limpiar display
+        if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = ''; // Limpiar display al borrar todo
         renderUI(false); 
         alert("Historial borrado exitosamente ✅");
         console.log("app.js: Historial borrado.");
@@ -256,9 +261,11 @@ function deleteSingleEntry(entryIdToDelete) {
     }
 }
 
+
 // -------------------------------------
 //  RENDERIZADO DE UI (GRÁFICO E HISTORIAL)
 // -------------------------------------
+// ... (renderUI, renderChart, renderHistoryList se mantienen igual que en la versión anterior) ...
 function renderUI(isRealtimeChartUpdate = false) {
     console.log(`app.js: renderUI llamado. RealtimeChartUpdate: ${isRealtimeChartUpdate}`);
     renderChart(isRealtimeChartUpdate); 
@@ -273,7 +280,7 @@ function renderChart(isRealtimeUpdate = false) {
     }
     if (typeof Chart === 'undefined') {
         console.error("app.js: Chart.js no está definido...");
-        if (DOMElements.chartCanvas) DOMElements.chartCanvas.innerHTML = '<p style="color:red; text-align:center;">Error: Librería de gráficos no cargada.</p>';
+        DOMElements.chartCanvas.innerHTML = '<p style="color:red; text-align:center;">Error: Librería de gráficos no cargada.</p>';
         return;
     }
 
@@ -290,6 +297,7 @@ function renderChart(isRealtimeUpdate = false) {
         entriesForChart = JSON.parse(JSON.stringify(appState.timeEntries));
     }
     
+
     if (isRealtimeUpdate && appState.isTimerRunning && DOMElements.categorySelect && DOMElements.categorySelect.value && appState.currentSessionStartTime > 0) {
         const currentCategory = DOMElements.categorySelect.value;
         const currentDuration = Date.now() - appState.currentSessionStartTime;
@@ -434,26 +442,26 @@ function renderHistoryList() {
 // -------------------------------------
 //  INICIALIZACIÓN Y EVENT LISTENERS
 // -------------------------------------
+// ... (initializeApp y el listener DOMContentLoaded se mantienen igual) ...
 function initializeApp() {
     console.log("app.js: initializeApp comenzando...");
     
-    cacheDOMElements(); // Cachear elementos aquí
+    cacheDOMElements();
 
-    // **** LA PARTE QUE ME PASASTE EMPIEZA AQUÍ ****
-    // Comprobar elementos (modificado para ser menos estricto con currentSessionDisplay)
+    // Modificado para no hacer FATAL si currentSessionDisplay no existe, ya que es opcional/nuevo
     if (!DOMElements.startStopBtn || !DOMElements.deleteHistoryBtn || !DOMElements.categorySelect || !DOMElements.timerDisplay || !DOMElements.historyList || !DOMElements.chartCanvas) {
         console.error("app.js: Faltan elementos del DOM esenciales (no opcionales) para inicializar la aplicación.");
-        return; // Detener si faltan elementos CRUCIALES
+        return; 
     }
-    if (!DOMElements.currentSessionDisplay) { // Solo advertir si falta el nuevo
+    if (!DOMElements.currentSessionDisplay) { // Solo advertir si falta el nuevo elemento
         console.warn("app.js: Elemento 'currentSessionDisplay' no encontrado. El display de sesión actual no funcionará.");
     }
     
     console.log("app.js: Elementos del DOM necesarios (y opcionales) procesados.");
 
     loadEntriesFromLocalStorage();
-    if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = ''; // Limpiar al inicio
-    renderUI(false); // Primera renderización
+    if (DOMElements.currentSessionDisplay) DOMElements.currentSessionDisplay.textContent = ''; // Asegurar que está limpio al inicio
+    renderUI(false); 
 
     console.log("app.js: Añadiendo event listeners...");
     DOMElements.startStopBtn.addEventListener('click', toggleTimer);
@@ -481,7 +489,6 @@ function initializeApp() {
         console.log("app.js: Event listener para borrado individual añadido a historyList.");
     }
 
-    // Añadir opción "Selecciona categoría"
     if (DOMElements.categorySelect && DOMElements.categorySelect.options.length > 0 && DOMElements.categorySelect.options[0].value !== "") {
         const defaultOption = document.createElement('option');
         defaultOption.value = "";
@@ -501,7 +508,6 @@ function initializeApp() {
     }
 
     console.log("app.js: initializeApp completado.");
-    // **** FIN DE LA PARTE QUE ME PASASTE ****
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -514,6 +520,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 console.log("app.js: Fin del script.");
-// ========================================================
-//  FIN DEL CÓDIGO COMPLETO PARA app.js (v1.5)
-// ========================================================
