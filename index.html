@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TimeTracker ⏱️</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Registro de Tiempo 🕹️</h1>
+        
+        <div class="timer-card">
+            <select id="category">
+                <option value="Videojuegos">🎮 Videojuegos</option>
+                <option value="Redes">📱 Redes Sociales</option>
+                <option value="Streaming">🎥 Streaming</option>
+            </select>
+            <button id="startStopBtn" onclick="toggleTimer()">▶️ Iniciar</button>
+            <p id="timerDisplay">00:00:00</p>
+        </div>
+
+        <div class="stats">
+            <h2>Estadísticas 📊</h2>
+            <canvas id="chart"></canvas>
+            <ul id="historyList"></ul>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
