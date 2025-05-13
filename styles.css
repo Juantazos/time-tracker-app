@@ -1,9 +1,514 @@
+@@ -1,509 +1,9 @@
+/* ------------------------------------ */
+/*          VARIABLES CSS               */
+/* ------------------------------------ */
+:root {
+    --primary-bg: #2E2E2E;
+    --secondary-bg: #424242;
+    --card-bg: #3A3A3A;
+    --text-color: #E0E0E0;
+    --text-color-secondary: #B0B0B0;
+    --accent-color: #FF6B6B;
+    --accent-color-darker: #E05252;
+    --danger-color: #FF4444;
+    --danger-color-darker: #D93636;
+    --success-color: #4CAF50;
+    --success-color-darker: #3E8E41; /* Añadido para consistencia con :hover/:focus del botón .running */
+    --focus-ring-color: #82E0AA; /* Un verde claro para el focus ring */
+    --focus-ring-danger-color: #FFA07A; /* Un color diferente para el focus de botones de peligro */
+
+
+    --border-radius-sm: 5px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 10px;
+
+    --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-size-base: 1rem;
+    --font-size-sm: 0.875rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.5rem;
+    --font-size-xxl: 2.5rem; /* Aumentado para #timerDisplay */
+    --font-size-h1: 2rem;
+    --font-size-h2: 1.75rem;
+    --font-size-h3: 1.375rem;
+
+    --line-height-base: 1.6;
+    --line-height-heading: 1.3;
+
+    --spacing-unit: 10px;
+    --spacing-xs: calc(var(--spacing-unit) * 0.5);
+    --spacing-sm: var(--spacing-unit);
+    --spacing-md: calc(var(--spacing-unit) * 1.5);
+    --spacing-lg: calc(var(--spacing-unit) * 2);
+    --spacing-xl: calc(var(--spacing-unit) * 3);
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+    --shadow-inset: inset 0 2px 4px rgba(0,0,0,0.2); /* Para botones activos */
+
+    --transition-speed: 0.2s;
+    --transition-timing: ease-in-out;
+}
+
+/* ------------------------------------ */
+/*          RESET Y GLOBALES            */
+/* ------------------------------------ */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    /* Opcional: un borde sutil para depurar layouts */
+    /* border: 1px dotted rgba(255,0,0,0.1); */
+}
+
+html {
+    font-size: 100%;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-stack);
+    font-size: var(--font-size-base);
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    line-height: var(--line-height-base);
+    padding: var(--spacing-lg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ------------------------------------ */
+/*          LAYOUT Y CONTENEDORES       */
+/* ------------------------------------ */
+.container {
+    width: 100%;
+    max-width: 800px; /* Límite de ancho para contenido principal */
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+}
+
+header {
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+}
+
+main.container {
+    flex-grow: 1;
+}
+
+footer {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--secondary-bg);
+    text-align: center;
+    color: var(--text-color-secondary);
+    font-size: var(--font-size-sm);
+}
+
+footer a {
+    color: var(--text-color-secondary);
+    text-decoration: none;
+    transition: color var(--transition-speed) var(--transition-timing);
+}
+footer a:hover,
+footer a:focus { /* Añadido :focus para consistencia */
+    color: var(--text-color);
+    text-decoration: underline;
+    outline: none; /* Si la decoración de subrayado es suficiente para el foco */
+}
+
+/* ------------------------------------ */
+/*          TIPOGRAFÍA                  */
+/* ------------------------------------ */
+h1, h2, h3, h4, h5, h6 { /* Aplicar a todos los niveles de encabezado */
+    line-height: var(--line-height-heading);
+    margin-bottom: var(--spacing-md);
+    font-weight: 600; /* Un poco más de peso para los encabezados */
+}
+
+h1 { font-size: var(--font-size-h1); color: var(--accent-color); }
+h2 { font-size: var(--font-size-h2); }
+h3 { font-size: var(--font-size-h3); margin-top: var(--spacing-lg); } /* stats h3 */
+
+p {
+    margin-bottom: var(--spacing-md);
+}
+p:last-child { /* Evitar margen extra en el último párrafo de un contenedor */
+    margin-bottom: 0;
+}
+
+code {
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+    background-color: var(--secondary-bg);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9em;
+    color: var(--text-color); /* Asegurar que el color del texto sea legible */
+}
+
+/* ------------------------------------ */
+/*          FORMULARIOS                 */
+/* ------------------------------------ */
+label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: bold;
+    color: var(--text-color-secondary);
+    font-size: var(--font-size-sm); /* Ligeramente más pequeño */
+}
+
+select,
+input[type="text"], /* Si añades inputs de texto en el futuro */
+input[type="number"] {
+    width: 100%;
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--secondary-bg);
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    font-size: var(--font-size-base);
+    font-family: inherit; /* Heredar la fuente del body */
+    transition: border-color var(--transition-speed) var(--transition-timing), 
+                box-shadow var(--transition-speed) var(--transition-timing);
+}
+select:focus,
+input[type="text"]:focus,
+input[type="number"]:focus {
+    outline: none; /* Quitar outline por defecto */
+    border-color: var(--focus-ring-color);
+    box-shadow: 0 0 0 2px var(--focus-ring-color); /* Simular un anillo de enfoque */
+}
+
+.timer-card select { /* Específico para el select dentro del timer-card */
+    max-width: 350px; /* Un poco más de espacio si es necesario */
+    margin-left: auto; /* Centrar si es max-width y no width: 100% */
+    margin-right: auto;
+}
+
+/* ------------------------------------ */
+/*          COMPONENTES                 */
+/* ------------------------------------ */
+
+/* Tarjeta del Temporizador y Estadísticas (estilos comunes) */
+.timer-card,
+.stats {
+    background-color: var(--card-bg);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-speed) var(--transition-timing), 
+                box-shadow var(--transition-speed) var(--transition-timing);
+}
+.timer-card:hover,
+.stats:hover { /* Efecto hover sutil también para la tarjeta de stats */
+    transform: translateY(-3px); /* Quitado scale para evitar pixelación en texto */
+    box-shadow: var(--shadow-lg);
+}
+
+.timer-card { /* Estilos específicos solo para timer-card */
+    text-align: center;
+}
+
+#timerDisplay {
+    font-size: var(--font-size-xxl); /* Más grande */
+    font-weight: 700; /* Más bold */
+    color: var(--accent-color);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    letter-spacing: 1.5px; /* Ligeramente más espaciado */
+    font-variant-numeric: tabular-nums; /* Para que los números no salten al cambiar */
+}
+
+/* Botones */
+button,
+.button { /* Clase .button para estilizar <a> u otros como botones */
+    display: inline-flex; /* Para alinear iconos y texto dentro del botón si es necesario */
+    align-items: center;
+    justify-content: center;
+    background-color: var(--accent-color);
+    border: none;
+    padding: var(--spacing-sm) var(--spacing-lg);
+    color: white;
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    font-weight: 600; /* Ligeramente más bold */
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    margin: var(--spacing-sm);
+    text-align: center;
+    text-decoration: none;
+    line-height: 1.2; /* Para mejor alineación vertical del texto */
+    transition: background-color var(--transition-speed) var(--transition-timing), 
+                transform var(--transition-speed) var(--transition-timing),
+                box-shadow var(--transition-speed) var(--transition-timing);
+    box-shadow: var(--shadow-sm);
+    /* Mínimo ancho para evitar botones muy pequeños con solo un icono */
+    min-width: 44px; /* Buena práctica para accesibilidad táctil */
+    min-height: 44px;
+}
+
+button:hover,
+.button:hover {
+    background-color: var(--accent-color-darker);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+button:focus,
+.button:focus {
+    outline: none; /* Quitar outline por defecto */
+    box-shadow: 0 0 0 3px var(--primary-bg), 0 0 0 5px var(--focus-ring-color); /* Anillo de enfoque doble para mejor contraste */
+    background-color: var(--accent-color-darker);
+}
+
+button:active,
+.button:active {
+    background-color: var(--accent-color-darker);
+    transform: translateY(1px) scale(0.98);
+    box-shadow: var(--shadow-inset);
+}
+
+/* Botón de Iniciar/Detener con estado 'running' */
+#startStopBtn.running {
+    background-color: var(--success-color);
+}
+#startStopBtn.running:hover,
+#startStopBtn.running:focus {
+    background-color: var(--success-color-darker);
+}
+#startStopBtn.running:focus { /* Mantener color de focus ring genérico o uno específico para success */
+     box-shadow: 0 0 0 3px var(--primary-bg), 0 0 0 5px var(--focus-ring-color); /* O usar un --focus-ring-success-color */
+}
+
+
+/* Botón de Borrar Todo el Historial */
+.delete-btn { /* Este es el botón grande para borrar todo */
+    background-color: var(--danger-color);
+    /* Podría necesitarse más especificidad si otros botones de peligro tienen estilos diferentes */
+}
+.delete-btn:hover,
+.delete-btn:focus {
+    background-color: var(--danger-color-darker);
+}
+.delete-btn:focus {
+    box-shadow: 0 0 0 3px var(--primary-bg), 0 0 0 5px var(--focus-ring-danger-color);
+}
+.delete-btn:active {
+    background-color: var(--danger-color-darker);
+}
+
+/* Gráfico */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    max-width: 450px; /* Ligeramente más pequeño */
+    margin: var(--spacing-lg) auto;
+    background-color: var(--secondary-bg);
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-md); /* Aumentado padding interno */
+    box-shadow: var(--shadow-sm); /* Sombra sutil también para el contenedor del gráfico */
+}
+
+#chart {
+    display: block;
+    max-width: 100%;
+}
+
+/* Historial */
+#historyList {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--spacing-md);
+}
+
+.history-entry {
+    background-color: var(--secondary-bg);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-sm);
+    border-left: 4px solid var(--accent-color);
+    transition: background-color var(--transition-speed) var(--transition-timing),
+                transform var(--transition-speed) var(--transition-timing); /* Añadido transform a la transición */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.history-entry:hover {
+    background-color: #505050;
+    transform: translateX(3px); /* Pequeño desplazamiento al pasar el mouse */
+}
+
+.history-entry .entry-main-content {
+    flex-grow: 1;
+    margin-right: var(--spacing-sm); /* Espacio entre contenido y botón de borrar */
+}
+
+.history-entry .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+    flex-wrap: wrap; /* Permitir que se envuelva si no hay espacio */
+    gap: var(--spacing-sm); /* Espacio entre elementos si se envuelven */
+}
+.history-entry .entry-header strong {
+    font-size: 1.05em; /* Ligeramente más grande */
+    color: var(--text-color);
+}
+.history-entry .entry-header time {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-secondary);
+}
+
+.history-entry .entry-details span {
+    display: block;
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-color-secondary);
+}
+.history-entry .entry-details span code { /* Estilo específico para el code dentro de details */
+    color: var(--text-color); /* Que resalte un poco más */
+}
+.history-entry .entry-details span:last-child {
+    margin-bottom: 0;
+}
+
+/* Botón de borrar entrada individual (el 🗑️) */
+.delete-entry-btn {
+    background-color: transparent;
+    color: var(--danger-color);
+    border: none; /* Quitamos borde por defecto */
+    padding: var(--spacing-xs);
+    margin-left: var(--spacing-sm); /* Ya no es necesario si el .entry-main-content tiene margin-right */
+    border-radius: 50%;
+    width: 36px; /* Ligeramente más grande para mejor tactilidad */
+    height: 36px;
+    font-size: 1rem; /* Ajustar tamaño del icono */
+    line-height: 1;
+    box-shadow: none;
+    flex-shrink: 0; /* Evitar que el botón se encoja */
+    /* Quitar :active heredado o sobreescribirlo */
+    transform: none; 
+}
+.delete-entry-btn:hover,
+.delete-entry-btn:focus {
+    background-color: rgba(255, 68, 68, 0.15); /* Fondo más visible */
+    color: var(--danger-color-darker);
+    /* No es necesario border-color si no tiene borde */
+    transform: scale(1.1); /* Efecto de zoom sutil */
+    box-shadow: none;
+}
+.delete-entry-btn:focus { /* Anillo de focus específico */
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-bg), 0 0 0 4px var(--focus-ring-danger-color);
+}
+.delete-entry-btn:active {
+    background-color: rgba(255, 68, 68, 0.25);
+    transform: scale(0.95); /* Efecto de pulsación */
+}
+
+/* Mensaje para lista de historial vacía */
+.history-empty-message {
+    color: var(--text-color-secondary);
+    text-align: center;
+    font-style: italic;
+    padding: var(--spacing-lg);
+    background-color: transparent !important; /* Forzar transparencia */
+    border-left: none !important; /* Quitar borde */
+}
+.history-empty-message:hover {
+    background-color: transparent !important; /* Sin efecto hover */
+    transform: none !important;
+}
+
+
+/* ------------------------------------ */
+/*          RESPONSIVE DESIGN           */
+/* ------------------------------------ */
 @media (max-width: 768px) { /* Tabletas y móviles grandes */
+    h1 { font-size: calc(var(--font-size-h1) * 0.9); }
+    h2 { font-size: calc(var(--font-size-h2) * 0.9); }
+    #timerDisplay { font-size: calc(var(--font-size-xxl) * 0.85); }
+
+
+    .chart-container {
+        height: 280px; /* Ajustar según sea necesario */
+    }
     /* ... otros ... */
     #currentSessionDisplay { font-size: calc(var(--font-size-md) * 0.95); }
 }
 
 @media (max-width: 600px) { /* Móviles */
+    body {
+        padding: var(--spacing-md);
+    }
+
+    .container {
+        padding-left: var(--spacing-sm);
+        padding-right: var(--spacing-sm);
+    }
+
+    h1 { font-size: calc(var(--font-size-h1) * 0.8); }
+    h2 { font-size: calc(var(--font-size-h2) * 0.8); }
+    #timerDisplay { font-size: calc(var(--font-size-xxl) * 0.7); }
+
+
+    .timer-card select {
+        max-width: none; /* Permitir que ocupe el 100% del .timer-card */
+    }
+
+    /* Botones principales full-width en móvil */
+    .timer-card #startStopBtn, /* Más específico para el botón de start/stop */
+    .stats .delete-btn { /* Específico para el botón de borrar todo el historial */
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: var(--spacing-md); /* Aumentar margen superior */
+        margin-bottom: var(--spacing-md);
+        padding-top: var(--spacing-md);
+        padding-bottom: var(--spacing-md);
+    }
+
+    .history-entry {
+        flex-direction: column; /* Apilar contenido y botón de borrar */
+        align-items: stretch; /* Que los hijos ocupen todo el ancho */
+    }
+    .history-entry .entry-main-content {
+        margin-right: 0; /* No necesita margen si se apilan */
+        margin-bottom: var(--spacing-sm); /* Espacio antes del botón de borrar */
+    }
+    .history-entry .delete-entry-btn {
+        align-self: flex-end; /* Alinear el botón de borrar a la derecha */
+        margin-left: 0; /* No necesita margen izquierdo */
+        /* Mantener tamaño o ajustarlo si es necesario */
+    }
+
+    .history-entry .entry-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs); /* Reducir gap */
+    }
     /* ... otros ... */
     #currentSessionDisplay { font-size: var(--font-size-sm); } /* Hacerlo un poco más pequeño en móviles */
 }
