@@ -5,10 +5,15 @@ console.log("app.js: Script cargado y ejecutándose."); // Log inicial
 // -------------------------------------
 //  CONSTANTES GLOBALES Y CONFIGURACIÓN
 // -------------------------------------
-const LOCAL_STORAGE_KEY = 'timeTrackerAppHistory_v1.3'; // Nueva versión por si acaso con borrado individual
+const LOCAL_STORAGE_KEY = 'timeTrackerAppHistory_v1.4'; // Nueva versión por actualización de gráfico en tiempo real
 const MS_IN_HOUR = 3600000;
 const MS_IN_MINUTE = 60000;
 const MS_IN_SECOND = 1000;
+
+// Límite para throttling de actualización del gráfico (en ms). 1000 = cada segundo.
+// Si se nota lentitud, se puede aumentar a 2000 o 3000.
+const CHART_REALTIME_UPDATE_INTERVAL = 1000; // Actualizar cada segundo
+let lastChartUpdateTime = 0; // Para el throttling
 
 const CHART_COLORS = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98FB98', '#ADD8E6',
@@ -103,8 +108,11 @@ function toggleTimer() {
         DOMElements.startStopBtn.textContent = '⏹️ Detener';
         DOMElements.startStopBtn.classList.add('running');
         DOMElements.startStopBtn.setAttribute('aria-label', 'Detener temporizador');
-        appState.timerIntervalId = setInterval(updateTimerDisplay, 1000);
+        // Iniciar el temporizador para actualizar el display y el gráfico
+        appState.timerIntervalId = setInterval(tick, 1000); // Cambiado a una función 'tick'
         console.log("app.js: Temporizador iniciado. Interval ID:", appState.timerIntervalId);
+        lastChartUpdateTime = 0; // Resetear el tiempo de la última actualización del gráfico para que se actualice al iniciar
+        tick(); // Llamar a tick inmediatamente para actualizar display y gráfico al iniciar
     } else {
         if (appState.timerIntervalId) {
             clearInterval(appState.timerIntervalId);
@@ -119,23 +127,44 @@ function toggleTimer() {
             saveCurrentEntry();
             appState.currentSessionStartTime = 0;
         }
-        renderUI();
+        renderUI(false); // Asegurar que el gráfico se renderice con animación al detener
+    }
+}
+
+// **** NUEVA FUNCIÓN TICK QUE AGRUPA ACTUALIZACIONES CADA SEGUNDO ****
+function tick() {
+    updateTimerDisplay(); // Actualizar el contador de tiempo
+
+    // Lógica de throttling para la actualización del gráfico
+    const now = Date.now();
+    if (now - lastChartUpdateTime > CHART_REALTIME_UPDATE_INTERVAL) {
+        if (appState.isTimerRunning) { // Solo actualizar si el timer está corriendo
+            renderChart(true); // Pasamos un flag para indicar que es una actualización en tiempo real
+        }
+        lastChartUpdateTime = now;
     }
 }
 
 function updateTimerDisplay() {
     if (!DOMElements.timerDisplay) return;
-    const elapsedMilliseconds = Date.now() - appState.currentSessionStartTime;
+    // Calcular tiempo transcurrido solo si hay un tiempo de inicio de sesión
+    const elapsedMilliseconds = appState.currentSessionStartTime > 0 ? (Date.now() - appState.currentSessionStartTime) : 0;
     DOMElements.timerDisplay.textContent = formatMillisecondsToTime(elapsedMilliseconds);
 }
 
 // -------------------------------------
 //  MANEJO DE DATOS (ENTRADAS E HISTORIAL)
 // -------------------------------------
+// ... (saveCurrentEntry, loadEntriesFromLocalStorage, saveEntriesToLocalStorage, clearAllHistory, deleteSingleEntry se mantienen igual) ...
 function saveCurrentEntry() {
     if (!DOMElements.categorySelect) return;
     const category = DOMElements.categorySelect.value;
     const endTime = Date.now();
+    // Asegurarse de que currentSessionStartTime es válido antes de calcular la duración
+    if (appState.currentSessionStartTime <= 0) {
+        console.warn("app.js: Intento de guardar entrada sin un tiempo de inicio de sesión válido.");
+        return;
+    }
     const duration = endTime - appState.currentSessionStartTime;
 
     if (duration < MS_IN_SECOND || !category) {
@@ -186,7 +215,7 @@ function clearAllHistory() {
     if (confirm("⚠️ ¿Estás seguro de que quieres borrar TODO el historial? Esta acción no se puede deshacer.")) {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
         appState.timeEntries = [];
-        renderUI();
+        renderUI(false); // Pasar false para animación
         alert("Historial borrado exitosamente ✅");
         console.log("app.js: Historial borrado.");
     } else {
@@ -194,7 +223,6 @@ function clearAllHistory() {
     }
 }
 
-// **** FUNCIÓN PARA BORRAR UNA ENTRADA INDIVIDUAL (AÑADIDA/MODIFICADA) ****
 function deleteSingleEntry(entryIdToDelete) {
     console.log("app.js: deleteSingleEntry llamado para ID:", entryIdToDelete);
     if (!entryIdToDelete) {
@@ -208,30 +236,33 @@ function deleteSingleEntry(entryIdToDelete) {
     if (appState.timeEntries.length < initialLength) {
         console.log("app.js: Entrada borrada del estado. Actualizando localStorage y UI.");
         saveEntriesToLocalStorage();
-        renderUI();
+        renderUI(false); // Pasar false para animación
     } else {
         console.warn("app.js: No se encontró ninguna entrada con el ID para borrar:", entryIdToDelete);
     }
 }
 
+
 // -------------------------------------
 //  RENDERIZADO DE UI (GRÁFICO E HISTORIAL)
 // -------------------------------------
-function renderUI() {
-    console.log("app.js: renderUI llamado.");
-    renderChart();
-    renderHistoryList();
+// **** MODIFICADO renderUI para pasar el flag de isRealtimeUpdate a renderChart ****
+function renderUI(isRealtimeChartUpdate = false) {
+    console.log(`app.js: renderUI llamado. RealtimeChartUpdate: ${isRealtimeChartUpdate}`);
+    renderChart(isRealtimeChartUpdate); // Pasar el flag
+    renderHistoryList(); // La lista de historial no necesita actualización en tiempo real así
 }
 
-function renderChart() {
-    // ... (código de renderChart se mantiene igual que en la versión anterior con logs) ...
-    console.log("app.js: renderChart llamado.");
+
+// **** MODIFICADO renderChart para aceptar un parámetro de "actualización en tiempo real" ****
+function renderChart(isRealtimeUpdate = false) {
+    console.log(`app.js: renderChart llamado. RealtimeUpdate: ${isRealtimeUpdate}`);
     if (!DOMElements.chartCanvas) {
         console.warn("app.js: Elemento canvas del gráfico no encontrado. No se renderizará el gráfico.");
         return;
     }
-    if (typeof Chart === 'undefined') { 
-        console.error("app.js: Chart.js no está definido. Asegúrate de que la librería está cargada correctamente ANTES que app.js o usa defer correctamente.");
+    if (typeof Chart === 'undefined') {
+        console.error("app.js: Chart.js no está definido...");
         DOMElements.chartCanvas.innerHTML = '<p style="color:red; text-align:center;">Error: Librería de gráficos no cargada.</p>';
         return;
     }
@@ -242,8 +273,31 @@ function renderChart() {
         return;
     }
 
-    const categoryTotals = appState.timeEntries.reduce((acc, entry) => {
-        acc[entry.category] = (acc[entry.category] || 0) + entry.duration;
+    // Clonar las entradas para no modificar el estado original directamente al añadir la sesión actual
+    // Usar structuredClone para un deep clone más moderno si el navegador lo soporta (o mantener JSON.parse/stringify)
+    let entriesForChart;
+    try {
+        entriesForChart = structuredClone(appState.timeEntries);
+    } catch (e) { // Fallback para navegadores más antiguos
+        entriesForChart = JSON.parse(JSON.stringify(appState.timeEntries));
+    }
+    
+
+    if (isRealtimeUpdate && appState.isTimerRunning && DOMElements.categorySelect && DOMElements.categorySelect.value && appState.currentSessionStartTime > 0) {
+        const currentCategory = DOMElements.categorySelect.value;
+        const currentDuration = Date.now() - appState.currentSessionStartTime;
+        
+        const currentSessionEntry = {
+            category: currentCategory,
+            duration: currentDuration
+        };
+        entriesForChart.push(currentSessionEntry);
+    }
+
+    const categoryTotals = entriesForChart.reduce((acc, entry) => {
+        if (entry.category) {
+            acc[entry.category] = (acc[entry.category] || 0) + entry.duration;
+        }
         return acc;
     }, {});
 
@@ -251,24 +305,28 @@ function renderChart() {
     const data = Object.values(categoryTotals).map(ms => formatMillisecondsToHours(ms));
 
     if (appState.chartInstance) {
+        // Optimización: Si las etiquetas no han cambiado y es una actualización en tiempo real, solo actualizar los datos.
+        // Esto es más complejo si el número de categorías puede cambiar dinámicamente.
+        // Por ahora, mantenemos destruir y recrear para simplicidad y robustez.
         appState.chartInstance.destroy();
-        console.log("app.js: Instancia de gráfico anterior destruida.");
     }
 
-    if (labels.length === 0) {
-        console.log("app.js: No hay datos para el gráfico. Limpiando canvas.");
-        ctx.clearRect(0, 0, DOMElements.chartCanvas.width, DOMElements.chartCanvas.height);
-        ctx.font = "16px " + (getComputedStyle(document.body).fontFamily || "Arial, sans-serif");
-        ctx.fillStyle = getComputedStyle(document.body).color || "#FFFFFF";
-        ctx.textAlign = 'center';
-        if (DOMElements.chartCanvas.width > 0 && DOMElements.chartCanvas.height > 0) {
-            ctx.fillText("No hay datos para mostrar en el gráfico.", DOMElements.chartCanvas.width / 2, DOMElements.chartCanvas.height / 2);
-        } else {
-            console.warn("app.js: Canvas sin dimensiones, no se puede dibujar texto de 'No hay datos'.")
+    // Manejo de "No hay datos"
+    if (labels.length === 0 && data.every(d => d === 0)) { // Condición más precisa: no hay etiquetas o todos los datos son cero
+        if (!isRealtimeUpdate || appState.timeEntries.length === 0) { // Mostrar "No hay datos" si no es realtime y no hay historial,
+                                                                     // o si es realtime pero es la primera sesión y aún no hay datos significativos.
+            console.log("app.js: No hay datos para el gráfico. Limpiando canvas.");
+            ctx.clearRect(0, 0, DOMElements.chartCanvas.width, DOMElements.chartCanvas.height);
+            ctx.font = "16px " + (getComputedStyle(document.body).fontFamily || "Arial, sans-serif");
+            ctx.fillStyle = getComputedStyle(document.body).color || "#FFFFFF";
+            ctx.textAlign = 'center';
+            if (DOMElements.chartCanvas.width > 0 && DOMElements.chartCanvas.height > 0) {
+                ctx.fillText("No hay datos para mostrar en el gráfico.", DOMElements.chartCanvas.width / 2, DOMElements.chartCanvas.height / 2);
+            }
+            return; // Salir si no hay nada que dibujar
         }
-        return;
     }
-
+    
     try {
         appState.chartInstance = new Chart(ctx, {
             type: 'doughnut',
@@ -286,7 +344,7 @@ function renderChart() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: { duration: 800, easing: 'easeInOutQuart' },
+                animation: isRealtimeUpdate ? false : { duration: 800, easing: 'easeInOutQuart' },
                 plugins: {
                     legend: {
                         position: 'bottom',
@@ -299,8 +357,11 @@ function renderChart() {
                             label: function(context) {
                                 let label = context.label || '';
                                 if (label) label += ': ';
-                                if (context.parsed !== null && context.dataIndex < Object.values(categoryTotals).length) {
-                                    const totalMs = Object.values(categoryTotals)[context.dataIndex];
+                                // Usar el categoryTotals que incluye la sesión actual si es realtime
+                                const categoryTotalsForTooltip = categoryTotals; // Usar los totales ya calculados para este render
+                                if (context.parsed !== null && context.dataIndex < Object.keys(categoryTotalsForTooltip).length) {
+                                    const categoryName = Object.keys(categoryTotalsForTooltip)[context.dataIndex];
+                                    const totalMs = categoryTotalsForTooltip[categoryName];
                                     label += formatMillisecondsToTime(totalMs) + ` (${context.parsed.toFixed(2)}h)`;
                                 } else {
                                     label += context.parsed !== null ? `${context.parsed.toFixed(2)}h (datos incompletos)` : '(datos no disponibles)';
@@ -318,14 +379,17 @@ function renderChart() {
                 }
             }
         });
-        console.log("app.js: Nueva instancia de gráfico creada.");
     } catch (error) {
-        console.error("app.js: Error al crear la instancia de Chart.js:", error);
-        DOMElements.chartCanvas.innerHTML = '<p style="color:red; text-align:center;">Error al renderizar el gráfico.</p>';
+        console.error("app.js: Error al crear/actualizar la instancia de Chart.js:", error);
+        if (DOMElements.chartCanvas) { // Asegurarse que existe antes de modificarlo
+          DOMElements.chartCanvas.innerHTML = '<p style="color:red; text-align:center;">Error al renderizar el gráfico.</p>';
+        }
     }
 }
 
+
 function renderHistoryList() {
+    // ... (código de renderHistoryList se mantiene igual que en la versión anterior con borrado individual) ...
     console.log("app.js: renderHistoryList llamado.");
     if (!DOMElements.historyList) {
         console.warn("app.js: Elemento de lista de historial no encontrado.");
@@ -341,13 +405,12 @@ function renderHistoryList() {
     appState.timeEntries.slice().reverse().forEach(entry => {
         const li = document.createElement('li');
         li.className = 'history-entry';
-        li.setAttribute('data-entry-id', entry.id); // ID para borrado
+        li.setAttribute('data-entry-id', entry.id);
 
         const entryDate = new Date(entry.start).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
         const entryStartTime = new Date(entry.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
         const durationFormatted = formatMillisecondsToTime(entry.duration);
 
-        // **** HTML DE LA ENTRADA MODIFICADO PARA INCLUIR BOTÓN DE BORRAR ****
         li.innerHTML = `
             <div class="entry-main-content">
                 <div class="entry-header">
@@ -371,6 +434,7 @@ function renderHistoryList() {
 // -------------------------------------
 //  INICIALIZACIÓN Y EVENT LISTENERS
 // -------------------------------------
+// ... (initializeApp y el listener DOMContentLoaded se mantienen igual que en la versión anterior con borrado individual) ...
 function initializeApp() {
     console.log("app.js: initializeApp comenzando...");
     
@@ -384,17 +448,15 @@ function initializeApp() {
     console.log("app.js: Todos los elementos del DOM necesarios parecen estar presentes.");
 
     loadEntriesFromLocalStorage();
-    renderUI();
+    renderUI(false); // Primera renderización, no es en tiempo real
 
     console.log("app.js: Añadiendo event listeners...");
     DOMElements.startStopBtn.addEventListener('click', toggleTimer);
     DOMElements.deleteHistoryBtn.addEventListener('click', clearAllHistory);
 
-    // **** EVENT LISTENER PARA BORRADO INDIVIDUAL (AÑADIDO/MODIFICADO) ****
     if (DOMElements.historyList) {
         DOMElements.historyList.addEventListener('click', function(event) {
             const clickedElement = event.target;
-            // Buscar el botón de borrar, incluso si el clic fue en el emoji dentro del botón
             const deleteButton = clickedElement.closest('.delete-entry-btn'); 
 
             if (deleteButton) {
@@ -414,7 +476,6 @@ function initializeApp() {
         console.log("app.js: Event listener para borrado individual añadido a historyList.");
     }
 
-    // Añadir opción "Selecciona categoría" si no existe
     if (DOMElements.categorySelect && DOMElements.categorySelect.options.length > 0 && DOMElements.categorySelect.options[0].value !== "") {
         const defaultOption = document.createElement('option');
         defaultOption.value = "";
