@@ -47,12 +47,15 @@ function updateStats() {
         return acc;
     }, {});
 
-    new Chart(ctx, {
+    // Destruye el gráfico anterior si existe
+    if (window.myChart) window.myChart.destroy();
+
+    window.myChart = new Chart(ctx, {
         type: 'pie',
         data: {
             labels: Object.keys(categories),
             datasets: [{
-                data: Object.values(categories).map(ms => ms / 3600000), // Horas
+                data: Object.values(categories).map(ms => ms / 3600000),
                 backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1']
             }]
         },
@@ -64,6 +67,16 @@ function updateStats() {
     list.innerHTML = history.map(entry => `
         <li>${new Date(entry.start).toLocaleDateString()}: ${entry.category} - ${((entry.end - entry.start)/3600000).toFixed(2)}h</li>
     `).join('');
+}
+
+// ====== NUEVA FUNCIÓN PARA BORRAR HISTORIAL ====== //
+function clearHistory() {
+    if (confirm("⚠️ ¿Borrar TODO el historial? ¡Esta acción no se puede deshacer!")) {
+        localStorage.clear();
+        history = [];
+        updateStats(); // Actualiza el gráfico y la lista
+        alert("Historial borrado ✅");
+    }
 }
 
 // Inicializar estadísticas al cargar
