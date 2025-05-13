@@ -1,76 +1,172 @@
+/* 1. Variables CSS (Custom Properties) para mejor mantenibilidad y consistencia */
+:root {
+    --primary-bg: #2E2E2E;
+    --secondary-bg: #424242;
+    --text-color: white;
+    --accent-color: #FF6B6B;
+    --danger-color: #FF4444; /* Color para el botón de borrar */
+    --light-text-color: #888;
+    --border-radius-sm: 5px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 10px;
+    --font-stack: Arial, sans-serif; /* 1a. Considerar alternativas más modernas si quieres: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" */
+    --spacing-unit: 10px; /* 1b. Unidad base para espaciado */
+}
+
+/* 2. Reset básico y box-sizing */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0; /* 2a. Mover el margin: 0 aquí es más un reset global */
+    padding: 0; /* 2b. Añadir padding: 0 como reset general */
+}
+
+html {
+    font-size: 16px; /* 2c. Base para unidades rem si decides usarlas */
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: #2E2E2E;
-    color: white;
-    margin: 0;
-    padding: 20px;
+    font-family: var(--font-stack);
+    background-color: var(--primary-bg); /* Usando variable */
+    color: var(--text-color); /* Usando variable */
+    padding: calc(var(--spacing-unit) * 2); /* 20px, usando variable */
+    line-height: 1.6; /* 2d. Mejora la legibilidad del texto */
+    min-height: 100vh; /* 2e. Asegura que el body ocupe al menos toda la altura de la pantalla */
 }
 
 .container {
     max-width: 800px;
-    margin: 0 auto;
+    margin-left: auto; /* margin: 0 auto; es lo mismo que margin-left/right: auto */
+    margin-right: auto;
+    padding-left: var(--spacing-unit); /* 2f. Padding dentro del container es a veces preferible al del body si quieres fondos full-width */
+    padding-right: var(--spacing-unit);
 }
 
 .timer-card {
-    background: #424242;
-    padding: 20px;
-    border-radius: 10px;
+    background-color: var(--secondary-bg);
+    padding: calc(var(--spacing-unit) * 2); /* 20px */
+    border-radius: var(--border-radius-lg);
     text-align: center;
-    margin-bottom: 20px;
-    transition: transform 0.3s ease; /* Animación al hacer hover */
+    margin-bottom: calc(var(--spacing-unit) * 2); /* 20px */
+    transition: transform 0.3s ease;
+    /* 2g. Considerar un box-shadow para un efecto de elevación más pronunciado */
+    /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
 }
 
 .timer-card:hover {
-    transform: scale(1.02); /* Efecto de elevación suave */
+    transform: scale(1.02);
+    /* box-shadow: 0 5px 15px rgba(0,0,0,0.2); */
 }
 
-button {
-    background: #FF6B6B;
+/* 3. Estilos de botones más granulares y sin !important */
+button,
+.button { /* 3a. Clase genérica .button por si necesitas estilizar <a> como botones */
+    display: inline-block; /* Para que el padding y margin funcionen consistentemente */
+    background-color: var(--accent-color);
     border: none;
-    padding: 10px 20px;
-    color: white;
-    border-radius: 5px;
+    padding: var(--spacing-unit) calc(var(--spacing-unit) * 2); /* 10px 20px */
+    color: var(--text-color);
+    font-family: inherit; /* 3b. Asegurar que hereda la fuente del body */
+    font-size: 1rem; /* 3c. Tamaño de fuente base, ajustable */
+    border-radius: var(--border-radius-sm);
     cursor: pointer;
-    margin: 10px;
-    transition: filter 0.2s ease; /* Efecto al interactuar */
+    margin: var(--spacing-unit); /* 10px */
+    text-align: center;
+    text-decoration: none; /* Para los <a> estilizados como .button */
+    transition: background-color 0.2s ease, filter 0.2s ease, transform 0.2s ease; /* 3d. Transicionar también background-color */
 }
 
-button:active {
-    filter: brightness(0.9); /* Efecto de pulsación */
+/* 3e. Mejorar los estados de hover y focus para accesibilidad y feedback */
+button:hover,
+.button:hover {
+    filter: brightness(1.1); /* Un poco más brillante al pasar el mouse */
+}
+
+button:focus, /* Estilo para cuando el botón tiene el foco (navegación por teclado) */
+.button:focus {
+    outline: 2px solid var(--accent-color); /* O un color de contraste */
+    outline-offset: 2px;
+    filter: brightness(1.1);
+}
+
+button:active,
+.button:active {
+    filter: brightness(0.9);
     transform: scale(0.98);
 }
 
+/* 4. Botón de borrar específico, sin !important */
 .delete-btn {
-    background: #FF4444 !important;
-    margin-top: 15px;
+    background-color: var(--danger-color); /* Usando variable, esto anulará el background del botón general si este selector es igual o más específico y viene después */
+    margin-top: calc(var(--spacing-unit) * 1.5); /* 15px */
+}
+
+.delete-btn:hover,
+.delete-btn:focus {
+    filter: brightness(1.1); /* Ajusta el brillo para el color de peligro */
+}
+
+.delete-btn:active {
+    filter: brightness(0.9); /* Ajusta el brillo para el color de peligro */
+    transform: scale(0.98);
 }
 
 #chart {
-    background: white;
-    border-radius: 8px;
-    margin: 20px 0;
+    background-color: white; /* El canvas en sí mismo no toma background-color, pero su contenedor sí, o puedes dibujar un rect de fondo en JS */
+    border-radius: var(--border-radius-md);
+    margin-top: calc(var(--spacing-unit) * 2); /* 20px */
+    margin-bottom: calc(var(--spacing-unit) * 2); /* 20px */
+    display: block; /* 4a. Los canvas son inline por defecto, block permite mejor control de márgenes y width */
+    max-width: 100%; /* 4b. Para asegurar que sea responsivo por defecto */
+    /* width: 100%; Podrías necesitar esto si no toma el ancho completo */
 }
 
 /* Mensaje cuando no hay historial */
+#historyList:empty::before { /* 5. Estilo para lista vacía usando :empty y pseudo-elemento */
+    content: "No hay actividades registradas aún."; /* 5a. El texto ahora está en el CSS */
+    display: block; /* Para que text-align y otras propiedades de bloque funcionen */
+    color: var(--light-text-color);
+    text-align: center;
+    font-style: italic;
+    padding: var(--spacing-unit);
+}
+/* Si mantienes el <p> en el HTML para el mensaje, tu selector original está bien:
 #historyList p {
-    color: #888;
+    color: var(--light-text-color);
     text-align: center;
     font-style: italic;
 }
+*/
+
 
 /* Responsive para móviles */
 @media (max-width: 600px) {
+    body {
+        padding: var(--spacing-unit); /* 10px */
+    }
+
     .container {
-        padding: 10px;
+        /* El padding ya se ajusta si lo defines con variables o lo mantienes en el body */
+        /* padding: var(--spacing-unit); Si el padding principal estaba en .container */
     }
     
     #chart {
-        max-width: 100%;
-        margin: 10px 0;
+        /* max-width: 100% ya está definido arriba, no es necesario repetirlo */
+        margin-top: var(--spacing-unit); /* 10px */
+        margin-bottom: var(--spacing-unit); /* 10px */
     }
     
-    button {
+    /* 6. Ser más específico con los botones que quieres que sean full-width */
+    .timer-card button,
+    .timer-card .button { /* Aplicar solo a botones dentro de .timer-card */
         width: 100%;
-        margin: 10px 0;
+        margin-left: 0;
+        margin-right: 0;
+        margin-top: var(--spacing-unit); /* 10px */
+        margin-bottom: var(--spacing-unit); /* 10px */
     }
+
+    /* Si quieres TODOS los botones full width en móvil, tu selector original `button` está bien,
+       pero es menos flexible si añades otros botones que no quieras full-width. */
 }
