@@ -27,6 +27,10 @@ button {
     border-radius: 5px;
     cursor: pointer;
     margin: 10px;
+    .delete-btn {
+    background: #FF4444 !important; /* Rojo más intenso */
+    margin-top: 15px;
+}
 }
 
 #chart {
