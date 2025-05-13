@@ -1,172 +1,398 @@
-/* 1. Variables CSS (Custom Properties) para mejor mantenibilidad y consistencia */
+/* ------------------------------------ */
+/*          VARIABLES CSS               */
+/* ------------------------------------ */
 :root {
     --primary-bg: #2E2E2E;
     --secondary-bg: #424242;
-    --text-color: white;
+    --card-bg: #3A3A3A; /* Un color ligeramente diferente para las tarjetas si se desea */
+    --text-color: #E0E0E0; /* Un blanco un poco más suave */
+    --text-color-secondary: #B0B0B0; /* Para texto menos prominente */
     --accent-color: #FF6B6B;
-    --danger-color: #FF4444; /* Color para el botón de borrar */
-    --light-text-color: #888;
+    --accent-color-darker: #E05252; /* Para hover/active de acento */
+    --danger-color: #FF4444;
+    --danger-color-darker: #D93636; /* Para hover/active de peligro */
+    --success-color: #4CAF50; /* Para mensajes de éxito o estados positivos */
+    --focus-ring-color: #82E0AA; /* Un color de anillo de enfoque visible */
+
     --border-radius-sm: 5px;
     --border-radius-md: 8px;
     --border-radius-lg: 10px;
-    --font-stack: Arial, sans-serif; /* 1a. Considerar alternativas más modernas si quieres: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" */
-    --spacing-unit: 10px; /* 1b. Unidad base para espaciado */
+
+    --font-stack: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; /* Pila de fuentes moderna */
+    --font-size-base: 1rem; /* 16px por defecto */
+    --font-size-sm: 0.875rem; /* 14px */
+    --font-size-lg: 1.25rem;  /* 20px */
+    --font-size-xl: 1.5rem;   /* 24px para #timerDisplay */
+    --font-size-h1: 2rem;     /* 32px */
+    --font-size-h2: 1.75rem;  /* 28px */
+    --font-size-h3: 1.375rem; /* 22px */
+
+    --line-height-base: 1.6;
+    --line-height-heading: 1.3;
+
+    --spacing-unit: 10px;
+    --spacing-xs: calc(var(--spacing-unit) * 0.5);  /* 5px */
+    --spacing-sm: var(--spacing-unit);              /* 10px */
+    --spacing-md: calc(var(--spacing-unit) * 1.5);  /* 15px */
+    --spacing-lg: calc(var(--spacing-unit) * 2);    /* 20px */
+    --spacing-xl: calc(var(--spacing-unit) * 3);    /* 30px */
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+    --shadow-md: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+    --shadow-lg: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+
+    --transition-speed: 0.2s;
+    --transition-timing: ease-in-out;
 }
 
-/* 2. Reset básico y box-sizing */
+/* ------------------------------------ */
+/*          RESET Y GLOBALES            */
+/* ------------------------------------ */
 *,
 *::before,
 *::after {
     box-sizing: border-box;
-    margin: 0; /* 2a. Mover el margin: 0 aquí es más un reset global */
-    padding: 0; /* 2b. Añadir padding: 0 como reset general */
+    margin: 0;
+    padding: 0;
 }
 
 html {
-    font-size: 16px; /* 2c. Base para unidades rem si decides usarlas */
+    font-size: 100%; /* 16px por defecto, permite al usuario escalar */
+    scroll-behavior: smooth; /* Desplazamiento suave para anclas */
 }
 
 body {
     font-family: var(--font-stack);
-    background-color: var(--primary-bg); /* Usando variable */
-    color: var(--text-color); /* Usando variable */
-    padding: calc(var(--spacing-unit) * 2); /* 20px, usando variable */
-    line-height: 1.6; /* 2d. Mejora la legibilidad del texto */
-    min-height: 100vh; /* 2e. Asegura que el body ocupe al menos toda la altura de la pantalla */
+    font-size: var(--font-size-base);
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    line-height: var(--line-height-base);
+    padding: var(--spacing-lg);
+    min-height: 100vh;
+    display: flex; /* Para centrar el footer si el contenido es corto */
+    flex-direction: column; /* Para centrar el footer */
 }
 
+/* Clase para ocultar contenido visualmente pero mantenerlo accesible */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ------------------------------------ */
+/*          LAYOUT Y CONTENEDORES       */
+/* ------------------------------------ */
 .container {
+    width: 100%;
     max-width: 800px;
-    margin-left: auto; /* margin: 0 auto; es lo mismo que margin-left/right: auto */
+    margin-left: auto;
     margin-right: auto;
-    padding-left: var(--spacing-unit); /* 2f. Padding dentro del container es a veces preferible al del body si quieres fondos full-width */
-    padding-right: var(--spacing-unit);
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
 }
 
-.timer-card {
+header {
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+}
+
+main.container {
+    flex-grow: 1; /* Para que el contenido principal ocupe el espacio y empuje el footer */
+}
+
+footer {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--secondary-bg);
+    text-align: center;
+    color: var(--text-color-secondary);
+    font-size: var(--font-size-sm);
+}
+
+footer a {
+    color: var(--text-color-secondary);
+    text-decoration: none;
+}
+footer a:hover {
+    color: var(--text-color);
+    text-decoration: underline;
+}
+
+/* ------------------------------------ */
+/*          TIPOGRAFÍA                  */
+/* ------------------------------------ */
+h1, h2, h3 {
+    line-height: var(--line-height-heading);
+    margin-bottom: var(--spacing-md);
+}
+
+h1 { font-size: var(--font-size-h1); color: var(--accent-color); }
+h2 { font-size: var(--font-size-h2); }
+h3 { font-size: var(--font-size-h3); margin-top: var(--spacing-lg); }
+
+p {
+    margin-bottom: var(--spacing-md);
+}
+
+code { /* Para mostrar datos técnicos como duraciones */
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
     background-color: var(--secondary-bg);
-    padding: calc(var(--spacing-unit) * 2); /* 20px */
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9em;
+}
+
+/* ------------------------------------ */
+/*          COMPONENTES                 */
+/* ------------------------------------ */
+
+/* Tarjeta del Temporizador */
+.timer-card {
+    background-color: var(--card-bg);
+    padding: var(--spacing-lg);
     border-radius: var(--border-radius-lg);
     text-align: center;
-    margin-bottom: calc(var(--spacing-unit) * 2); /* 20px */
-    transition: transform 0.3s ease;
-    /* 2g. Considerar un box-shadow para un efecto de elevación más pronunciado */
-    /* box-shadow: 0 2px 5px rgba(0,0,0,0.1); */
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-speed) var(--transition-timing), box-shadow var(--transition-speed) var(--transition-timing);
 }
 
 .timer-card:hover {
-    transform: scale(1.02);
-    /* box-shadow: 0 5px 15px rgba(0,0,0,0.2); */
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: var(--shadow-lg);
 }
 
-/* 3. Estilos de botones más granulares y sin !important */
+.timer-card label {
+    display: block;
+    margin-bottom: var(--spacing-xs);
+    font-weight: bold;
+    color: var(--text-color-secondary);
+}
+
+.timer-card select {
+    width: 100%;
+    max-width: 300px; /* Evita que sea demasiado ancho en pantallas grandes */
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--secondary-bg);
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    font-size: var(--font-size-base);
+}
+.timer-card select:focus {
+    outline: 2px solid var(--focus-ring-color);
+    border-color: var(--focus-ring-color);
+}
+
+#timerDisplay {
+    font-size: var(--font-size-xl); /* Más grande */
+    font-weight: bold;
+    color: var(--accent-color);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    letter-spacing: 1px;
+}
+
+/* Botones */
 button,
-.button { /* 3a. Clase genérica .button por si necesitas estilizar <a> como botones */
-    display: inline-block; /* Para que el padding y margin funcionen consistentemente */
+.button {
+    display: inline-block;
     background-color: var(--accent-color);
     border: none;
-    padding: var(--spacing-unit) calc(var(--spacing-unit) * 2); /* 10px 20px */
-    color: var(--text-color);
-    font-family: inherit; /* 3b. Asegurar que hereda la fuente del body */
-    font-size: 1rem; /* 3c. Tamaño de fuente base, ajustable */
+    padding: var(--spacing-sm) var(--spacing-lg);
+    color: white; /* Color de texto más brillante para contraste con fondo de botón */
+    font-family: inherit;
+    font-size: var(--font-size-base);
+    font-weight: bold;
     border-radius: var(--border-radius-sm);
     cursor: pointer;
-    margin: var(--spacing-unit); /* 10px */
+    margin: var(--spacing-sm);
     text-align: center;
-    text-decoration: none; /* Para los <a> estilizados como .button */
-    transition: background-color 0.2s ease, filter 0.2s ease, transform 0.2s ease; /* 3d. Transicionar también background-color */
+    text-decoration: none;
+    transition: background-color var(--transition-speed) var(--transition-timing), 
+                transform var(--transition-speed) var(--transition-timing),
+                box-shadow var(--transition-speed) var(--transition-timing);
+    box-shadow: var(--shadow-sm);
 }
 
-/* 3e. Mejorar los estados de hover y focus para accesibilidad y feedback */
 button:hover,
 .button:hover {
-    filter: brightness(1.1); /* Un poco más brillante al pasar el mouse */
+    background-color: var(--accent-color-darker);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-button:focus, /* Estilo para cuando el botón tiene el foco (navegación por teclado) */
+button:focus,
 .button:focus {
-    outline: 2px solid var(--accent-color); /* O un color de contraste */
+    outline: 3px solid var(--focus-ring-color); /* Anillo de enfoque más prominente */
     outline-offset: 2px;
-    filter: brightness(1.1);
+    background-color: var(--accent-color-darker); /* Similar al hover para consistencia */
 }
 
 button:active,
 .button:active {
-    filter: brightness(0.9);
-    transform: scale(0.98);
+    background-color: var(--accent-color-darker);
+    transform: translateY(1px) scale(0.98);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); /* Efecto de pulsación */
 }
 
-/* 4. Botón de borrar específico, sin !important */
+/* Botón de Iniciar/Detener con estado 'running' (añadido por JS) */
+#startStopBtn.running {
+    background-color: var(--success-color); /* Verde cuando está corriendo */
+}
+#startStopBtn.running:hover,
+#startStopBtn.running:focus {
+    background-color: #3E8E41; /* Verde más oscuro */
+}
+
+
 .delete-btn {
-    background-color: var(--danger-color); /* Usando variable, esto anulará el background del botón general si este selector es igual o más específico y viene después */
-    margin-top: calc(var(--spacing-unit) * 1.5); /* 15px */
+    background-color: var(--danger-color);
 }
-
 .delete-btn:hover,
 .delete-btn:focus {
-    filter: brightness(1.1); /* Ajusta el brillo para el color de peligro */
+    background-color: var(--danger-color-darker);
+}
+.delete-btn:active {
+    background-color: var(--danger-color-darker);
 }
 
-.delete-btn:active {
-    filter: brightness(0.9); /* Ajusta el brillo para el color de peligro */
-    transform: scale(0.98);
+/* Estadísticas y Gráfico */
+.stats {
+    background-color: var(--card-bg);
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.chart-container {
+    position: relative; /* Necesario para maintainAspectRatio: false en Chart.js */
+    height: 300px; /* Altura fija o controlada por media queries */
+    width: 100%;
+    max-width: 500px; /* Límite para que no sea gigante en pantallas anchas */
+    margin: var(--spacing-lg) auto; /* Centrar el gráfico */
+    background-color: var(--secondary-bg); /* Fondo sutil para el área del gráfico */
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-sm);
 }
 
 #chart {
-    background-color: white; /* El canvas en sí mismo no toma background-color, pero su contenedor sí, o puedes dibujar un rect de fondo en JS */
-    border-radius: var(--border-radius-md);
-    margin-top: calc(var(--spacing-unit) * 2); /* 20px */
-    margin-bottom: calc(var(--spacing-unit) * 2); /* 20px */
-    display: block; /* 4a. Los canvas son inline por defecto, block permite mejor control de márgenes y width */
-    max-width: 100%; /* 4b. Para asegurar que sea responsivo por defecto */
-    /* width: 100%; Podrías necesitar esto si no toma el ancho completo */
+    /* background-color: white; /* No es necesario si el contenedor tiene fondo */
+    /* border-radius: var(--border-radius-md); */
+    /* margin: var(--spacing-lg) 0; */ /* Movido al chart-container */
+    display: block;
+    max-width: 100%;
 }
 
-/* Mensaje cuando no hay historial */
-#historyList:empty::before { /* 5. Estilo para lista vacía usando :empty y pseudo-elemento */
-    content: "No hay actividades registradas aún."; /* 5a. El texto ahora está en el CSS */
-    display: block; /* Para que text-align y otras propiedades de bloque funcionen */
-    color: var(--light-text-color);
+/* Historial */
+#historyList {
+    list-style: none;
+    padding: 0;
+    margin-top: var(--spacing-md);
+}
+
+.history-entry {
+    background-color: var(--secondary-bg);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: var(--spacing-sm);
+    border-left: 4px solid var(--accent-color); /* Acento visual */
+    transition: background-color var(--transition-speed) var(--transition-timing);
+}
+.history-entry:hover {
+    background-color: #505050; /* Un poco más claro al pasar el mouse */
+}
+
+.history-entry .entry-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xs);
+}
+.history-entry .entry-header strong {
+    font-size: 1.1em;
+}
+.history-entry .entry-header time {
+    font-size: var(--font-size-sm);
+    color: var(--text-color-secondary);
+}
+
+.history-entry .entry-details span {
+    display: block; /* Para que ocupen líneas separadas si es necesario */
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--spacing-xs);
+}
+.history-entry .entry-details span:last-child {
+    margin-bottom: 0;
+}
+
+/* Mensaje para lista de historial vacía (ahora es un <li> con clase) */
+.history-empty-message {
+    color: var(--text-color-secondary);
     text-align: center;
     font-style: italic;
-    padding: var(--spacing-unit);
+    padding: var(--spacing-lg);
+    background-color: transparent; /* Sin fondo de item normal */
+    border-left: none; /* Sin borde de item normal */
 }
-/* Si mantienes el <p> en el HTML para el mensaje, tu selector original está bien:
-#historyList p {
-    color: var(--light-text-color);
-    text-align: center;
-    font-style: italic;
+.history-empty-message:hover {
+    background-color: transparent; /* Sin efecto hover */
 }
-*/
 
 
-/* Responsive para móviles */
+/* ------------------------------------ */
+/*          RESPONSIVE DESIGN           */
+/* ------------------------------------ */
+@media (max-width: 768px) {
+    h1 { font-size: calc(var(--font-size-h1) * 0.9); }
+    h2 { font-size: calc(var(--font-size-h2) * 0.9); }
+
+    .chart-container {
+        height: 250px; /* Altura más pequeña en móviles */
+    }
+}
+
 @media (max-width: 600px) {
     body {
-        padding: var(--spacing-unit); /* 10px */
+        padding: var(--spacing-md);
     }
 
     .container {
-        /* El padding ya se ajusta si lo defines con variables o lo mantienes en el body */
-        /* padding: var(--spacing-unit); Si el padding principal estaba en .container */
+        padding-left: var(--spacing-sm);
+        padding-right: var(--spacing-sm);
     }
-    
-    #chart {
-        /* max-width: 100% ya está definido arriba, no es necesario repetirlo */
-        margin-top: var(--spacing-unit); /* 10px */
-        margin-bottom: var(--spacing-unit); /* 10px */
-    }
-    
-    /* 6. Ser más específico con los botones que quieres que sean full-width */
+
+    h1 { font-size: calc(var(--font-size-h1) * 0.8); }
+    h2 { font-size: calc(var(--font-size-h2) * 0.8); }
+    #timerDisplay { font-size: calc(var(--font-size-xl) * 0.9); }
+
+
+    /* Botones full-width en tarjetas o secciones específicas en móvil */
     .timer-card button,
-    .timer-card .button { /* Aplicar solo a botones dentro de .timer-card */
+    .stats .delete-btn { /* Aplicar selectivamente */
         width: 100%;
         margin-left: 0;
         margin-right: 0;
-        margin-top: var(--spacing-unit); /* 10px */
-        margin-bottom: var(--spacing-unit); /* 10px */
+        margin-top: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+        padding-top: var(--spacing-md); /* Más área táctil */
+        padding-bottom: var(--spacing-md);
     }
 
-    /* Si quieres TODOS los botones full width en móvil, tu selector original `button` está bien,
-       pero es menos flexible si añades otros botones que no quieras full-width. */
+    .history-entry .entry-header {
+        flex-direction: column; /* Apilar encabezado en móvil */
+        align-items: flex-start;
+    }
+    .history-entry .entry-header time {
+        margin-top: var(--spacing-xs);
+    }
 }
