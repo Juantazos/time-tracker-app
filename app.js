@@ -5,7 +5,7 @@ console.log("app.js: Script cargado y ejecutándose."); // Log inicial
 // -------------------------------------
 //  CONSTANTES GLOBALES Y CONFIGURACIÓN
 // -------------------------------------
-const LOCAL_STORAGE_KEY = 'timeTrackerAppHistory_v1.2'; // Nueva versión por si acaso
+const LOCAL_STORAGE_KEY = 'timeTrackerAppHistory_v1.3'; // Nueva versión por si acaso con borrado individual
 const MS_IN_HOUR = 3600000;
 const MS_IN_MINUTE = 60000;
 const MS_IN_SECOND = 1000;
@@ -18,7 +18,6 @@ const CHART_COLORS = [
 // -------------------------------------
 //  SELECTORES DEL DOM (CACHEADOS)
 // -------------------------------------
-// Es crucial que estos IDs y clases coincidan EXACTAMENTE con tu HTML
 const DOMElements = {
     startStopBtn: null,
     timerDisplay: null,
@@ -37,16 +36,12 @@ function cacheDOMElements() {
     DOMElements.chartCanvas = document.getElementById('chart');
     DOMElements.deleteHistoryBtn = document.querySelector('.delete-btn');
 
-    // Verificación de elementos
     for (const key in DOMElements) {
         if (DOMElements[key] === null) {
             console.error(`app.js: ERROR - Elemento del DOM no encontrado: ${key}. Verifica el ID/clase en HTML.`);
-        } else {
-            // console.log(`app.js: Elemento del DOM encontrado: ${key}`, DOMElements[key]); // Descomentar para depuración detallada
         }
     }
 }
-
 
 // -------------------------------------
 //  ESTADO DE LA APLICACIÓN
@@ -63,7 +58,7 @@ let appState = {
 //  UTILIDADES
 // -------------------------------------
 function formatMillisecondsToTime(ms) {
-    if (typeof ms !== 'number' || isNaN(ms) || ms < 0) { // Verificación de tipo más estricta
+    if (typeof ms !== 'number' || isNaN(ms) || ms < 0) {
         console.warn("app.js: formatMillisecondsToTime recibió un valor inválido:", ms);
         return '00:00:00';
     }
@@ -75,7 +70,7 @@ function formatMillisecondsToTime(ms) {
 }
 
 function formatMillisecondsToHours(ms) {
-    if (typeof ms !== 'number' || isNaN(ms) || ms < 0) { // Verificación de tipo más estricta
+    if (typeof ms !== 'number' || isNaN(ms) || ms < 0) {
         console.warn("app.js: formatMillisecondsToHours recibió un valor inválido:", ms);
         return 0;
     }
@@ -87,7 +82,7 @@ function formatMillisecondsToHours(ms) {
 // -------------------------------------
 function toggleTimer() {
     console.log("app.js: toggleTimer llamado. Estado actual isTimerRunning:", appState.isTimerRunning);
-    if (!DOMElements.startStopBtn || !DOMElements.categorySelect) { // Defensa extra
+    if (!DOMElements.startStopBtn || !DOMElements.categorySelect) {
         console.error("app.js: Botón Start/Stop o select de categoría no encontrado en toggleTimer.");
         return;
     }
@@ -98,8 +93,7 @@ function toggleTimer() {
         if (!DOMElements.categorySelect.value || DOMElements.categorySelect.value === "") {
             alert("Por favor, selecciona una categoría antes de iniciar el temporizador.");
             console.log("app.js: Inicio de temporizador cancelado, categoría no seleccionada.");
-            appState.isTimerRunning = false; // Revertir estado
-            // Asegurar que el botón refleje el estado no iniciado
+            appState.isTimerRunning = false;
             DOMElements.startStopBtn.textContent = '▶️ Iniciar';
             DOMElements.startStopBtn.classList.remove('running');
             DOMElements.startStopBtn.setAttribute('aria-label', 'Iniciar temporizador');
@@ -115,23 +109,22 @@ function toggleTimer() {
         if (appState.timerIntervalId) {
             clearInterval(appState.timerIntervalId);
             console.log("app.js: Temporizador detenido. Interval ID:", appState.timerIntervalId, "limpiado.");
-            appState.timerIntervalId = null; // Resetear ID
+            appState.timerIntervalId = null;
         }
         DOMElements.startStopBtn.textContent = '▶️ Iniciar';
         DOMElements.startStopBtn.classList.remove('running');
         DOMElements.startStopBtn.setAttribute('aria-label', 'Iniciar temporizador');
         
-        // Solo guardar si realmente había un tiempo de inicio (para evitar guardar si se da doble clic rápido)
         if (appState.currentSessionStartTime > 0) {
             saveCurrentEntry();
-            appState.currentSessionStartTime = 0; // Resetear para la próxima sesión
+            appState.currentSessionStartTime = 0;
         }
         renderUI();
     }
 }
 
 function updateTimerDisplay() {
-    if (!DOMElements.timerDisplay) return; // Defensa
+    if (!DOMElements.timerDisplay) return;
     const elapsedMilliseconds = Date.now() - appState.currentSessionStartTime;
     DOMElements.timerDisplay.textContent = formatMillisecondsToTime(elapsedMilliseconds);
 }
@@ -140,7 +133,7 @@ function updateTimerDisplay() {
 //  MANEJO DE DATOS (ENTRADAS E HISTORIAL)
 // -------------------------------------
 function saveCurrentEntry() {
-    if (!DOMElements.categorySelect) return; // Defensa
+    if (!DOMElements.categorySelect) return;
     const category = DOMElements.categorySelect.value;
     const endTime = Date.now();
     const duration = endTime - appState.currentSessionStartTime;
@@ -175,9 +168,6 @@ function loadEntriesFromLocalStorage() {
     } catch (error) {
         console.error("app.js: Error al cargar/parsear entradas desde localStorage:", error);
         appState.timeEntries = [];
-        // Considerar limpiar localStorage si está corrupto
-        // localStorage.removeItem(LOCAL_STORAGE_KEY);
-        // alert("Hubo un problema al cargar el historial guardado. Es posible que se haya dañado y se haya reseteado.");
     }
 }
 
@@ -204,6 +194,26 @@ function clearAllHistory() {
     }
 }
 
+// **** FUNCIÓN PARA BORRAR UNA ENTRADA INDIVIDUAL (AÑADIDA/MODIFICADA) ****
+function deleteSingleEntry(entryIdToDelete) {
+    console.log("app.js: deleteSingleEntry llamado para ID:", entryIdToDelete);
+    if (!entryIdToDelete) {
+        console.warn("app.js: Se intentó borrar una entrada sin ID.");
+        return;
+    }
+
+    const initialLength = appState.timeEntries.length;
+    appState.timeEntries = appState.timeEntries.filter(entry => entry.id !== entryIdToDelete);
+
+    if (appState.timeEntries.length < initialLength) {
+        console.log("app.js: Entrada borrada del estado. Actualizando localStorage y UI.");
+        saveEntriesToLocalStorage();
+        renderUI();
+    } else {
+        console.warn("app.js: No se encontró ninguna entrada con el ID para borrar:", entryIdToDelete);
+    }
+}
+
 // -------------------------------------
 //  RENDERIZADO DE UI (GRÁFICO E HISTORIAL)
 // -------------------------------------
@@ -214,12 +224,13 @@ function renderUI() {
 }
 
 function renderChart() {
+    // ... (código de renderChart se mantiene igual que en la versión anterior con logs) ...
     console.log("app.js: renderChart llamado.");
     if (!DOMElements.chartCanvas) {
         console.warn("app.js: Elemento canvas del gráfico no encontrado. No se renderizará el gráfico.");
         return;
     }
-    if (typeof Chart === 'undefined') { // Comprobar si Chart.js está disponible
+    if (typeof Chart === 'undefined') { 
         console.error("app.js: Chart.js no está definido. Asegúrate de que la librería está cargada correctamente ANTES que app.js o usa defer correctamente.");
         DOMElements.chartCanvas.innerHTML = '<p style="color:red; text-align:center;">Error: Librería de gráficos no cargada.</p>';
         return;
@@ -250,7 +261,6 @@ function renderChart() {
         ctx.font = "16px " + (getComputedStyle(document.body).fontFamily || "Arial, sans-serif");
         ctx.fillStyle = getComputedStyle(document.body).color || "#FFFFFF";
         ctx.textAlign = 'center';
-        // Asegurarse que el canvas tiene dimensiones antes de dibujar texto
         if (DOMElements.chartCanvas.width > 0 && DOMElements.chartCanvas.height > 0) {
             ctx.fillText("No hay datos para mostrar en el gráfico.", DOMElements.chartCanvas.width / 2, DOMElements.chartCanvas.height / 2);
         } else {
@@ -268,7 +278,7 @@ function renderChart() {
                     label: 'Tiempo por Categoría (horas)',
                     data: data,
                     backgroundColor: labels.map((_, index) => CHART_COLORS[index % CHART_COLORS.length]),
-                    borderColor: getComputedStyle(document.body).getPropertyValue('--primary-bg') || '#333333', // Fallback más oscuro
+                    borderColor: getComputedStyle(document.body).getPropertyValue('--primary-bg') || '#333333',
                     borderWidth: 2,
                     hoverOffset: 4
                 }]
@@ -283,7 +293,7 @@ function renderChart() {
                         labels: { color: getComputedStyle(document.body).color || "#FFFFFF", padding: 20 }
                     },
                     tooltip: {
-                        backgroundColor: 'rgba(0,0,0,0.8)', // Ligeramente más opaco
+                        backgroundColor: 'rgba(0,0,0,0.8)',
                         titleColor: '#FFF', bodyColor: '#FFF',
                         callbacks: {
                             label: function(context) {
@@ -312,7 +322,6 @@ function renderChart() {
     } catch (error) {
         console.error("app.js: Error al crear la instancia de Chart.js:", error);
         DOMElements.chartCanvas.innerHTML = '<p style="color:red; text-align:center;">Error al renderizar el gráfico.</p>';
-
     }
 }
 
@@ -331,22 +340,27 @@ function renderHistoryList() {
     const fragment = document.createDocumentFragment();
     appState.timeEntries.slice().reverse().forEach(entry => {
         const li = document.createElement('li');
-        li.className = 'history-entry'; // Usar className es ligeramente más performante que classList.add para un solo elemento
-        li.setAttribute('data-entry-id', entry.id);
+        li.className = 'history-entry';
+        li.setAttribute('data-entry-id', entry.id); // ID para borrado
 
         const entryDate = new Date(entry.start).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
         const entryStartTime = new Date(entry.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
         const durationFormatted = formatMillisecondsToTime(entry.duration);
 
+        // **** HTML DE LA ENTRADA MODIFICADO PARA INCLUIR BOTÓN DE BORRAR ****
         li.innerHTML = `
-            <div class="entry-header">
-                <strong>${entry.category || 'Sin Categoría'}</strong> <!-- Fallback para categoría -->
-                <time datetime="${new Date(entry.start).toISOString()}">${entryDate} - ${entryStartTime}</time>
+            <div class="entry-main-content">
+                <div class="entry-header">
+                    <strong>${entry.category || 'Sin Categoría'}</strong>
+                    <time datetime="${new Date(entry.start).toISOString()}">${entryDate} - ${entryStartTime}</time>
+                </div>
+                <div class="entry-details">
+                    <span>Duración: <code>${durationFormatted}</code></span>
+                    <span>(Total: ${formatMillisecondsToHours(entry.duration)}h)</span>
+                </div>
             </div>
-            <div class="entry-details">
-                <span>Duración: <code>${durationFormatted}</code></span>
-                <span>(Total: ${formatMillisecondsToHours(entry.duration)}h)</span>
-            </div>`;
+            <button class="delete-entry-btn" data-entry-id="${entry.id}" aria-label="Borrar esta entrada">🗑️</button>
+        `;
         fragment.appendChild(li);
     });
     DOMElements.historyList.innerHTML = '';
@@ -360,14 +374,11 @@ function renderHistoryList() {
 function initializeApp() {
     console.log("app.js: initializeApp comenzando...");
     
-    cacheDOMElements(); // Cachear elementos primero
+    cacheDOMElements();
 
-    // Comprobaciones críticas de elementos del DOM
     if (!DOMElements.startStopBtn || !DOMElements.deleteHistoryBtn || !DOMElements.categorySelect || !DOMElements.timerDisplay || !DOMElements.historyList || !DOMElements.chartCanvas) {
-        console.error("app.js: FATAL - Faltan elementos del DOM esenciales para inicializar la aplicación. Comprueba los IDs y clases en tu HTML y el script.");
-        // Opcionalmente, mostrar un mensaje de error al usuario en el body
-        // document.body.innerHTML = "<p style='color:red; font-size:18px; text-align:center; padding:20px;'>Error crítico: La aplicación no pudo cargarse correctamente debido a elementos faltantes. Por favor, contacta soporte.</p>";
-        return; // Detener la inicialización si faltan elementos cruciales
+        console.error("app.js: FATAL - Faltan elementos del DOM esenciales para inicializar la aplicación...");
+        return;
     }
     
     console.log("app.js: Todos los elementos del DOM necesarios parecen estar presentes.");
@@ -378,7 +389,30 @@ function initializeApp() {
     console.log("app.js: Añadiendo event listeners...");
     DOMElements.startStopBtn.addEventListener('click', toggleTimer);
     DOMElements.deleteHistoryBtn.addEventListener('click', clearAllHistory);
-    console.log("app.js: Event listeners añadidos.");
+
+    // **** EVENT LISTENER PARA BORRADO INDIVIDUAL (AÑADIDO/MODIFICADO) ****
+    if (DOMElements.historyList) {
+        DOMElements.historyList.addEventListener('click', function(event) {
+            const clickedElement = event.target;
+            // Buscar el botón de borrar, incluso si el clic fue en el emoji dentro del botón
+            const deleteButton = clickedElement.closest('.delete-entry-btn'); 
+
+            if (deleteButton) {
+                console.log("app.js: Clic detectado en botón de borrar entrada individual.");
+                const entryId = deleteButton.dataset.entryId;
+                if (entryId) {
+                    if (confirm("¿Seguro que quieres borrar esta entrada del historial?")) {
+                        deleteSingleEntry(entryId);
+                    } else {
+                        console.log("app.js: Borrado de entrada individual cancelado por usuario.");
+                    }
+                } else {
+                    console.warn("app.js: Botón de borrar entrada individual sin data-entry-id.");
+                }
+            }
+        });
+        console.log("app.js: Event listener para borrado individual añadido a historyList.");
+    }
 
     // Añadir opción "Selecciona categoría" si no existe
     if (DOMElements.categorySelect && DOMElements.categorySelect.options.length > 0 && DOMElements.categorySelect.options[0].value !== "") {
@@ -386,34 +420,28 @@ function initializeApp() {
         defaultOption.value = "";
         defaultOption.textContent = "--- Selecciona Categoría ---";
         defaultOption.disabled = true;
-        defaultOption.selected = true; // Seleccionar por defecto
+        defaultOption.selected = true;
         DOMElements.categorySelect.prepend(defaultOption);
         console.log("app.js: Opción 'Selecciona Categoría' añadida al select.");
     } else if (DOMElements.categorySelect && DOMElements.categorySelect.options.length === 0) {
-        // Si no hay NINGUNA opción, añadir la de seleccionar y quizás un par por defecto
         const defaultOption = document.createElement('option');
         defaultOption.value = "";
         defaultOption.textContent = "--- Selecciona Categoría ---";
         defaultOption.disabled = true;
         defaultOption.selected = true;
         DOMElements.categorySelect.appendChild(defaultOption);
-        // Podrías añadir opciones por defecto aquí si el HTML estuviera completamente vacío
         console.log("app.js: Select de categoría estaba vacío, añadida opción por defecto.");
     }
-
 
     console.log("app.js: initializeApp completado.");
 }
 
-// El listener DOMContentLoaded es crucial.
 document.addEventListener('DOMContentLoaded', () => {
     console.log("app.js: Evento DOMContentLoaded disparado.");
     try {
         initializeApp();
     } catch (error) {
         console.error("app.js: Error catastrófico durante initializeApp:", error);
-        // Informar al usuario de un error grave si la app no puede iniciar
-        // document.body.innerHTML = "<p style='color:red; font-size:18px; text-align:center; padding:20px;'>La aplicación encontró un error crítico al iniciar. Por favor, intenta recargar la página.</p>";
     }
 });
 
